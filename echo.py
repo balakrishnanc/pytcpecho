@@ -36,6 +36,11 @@ def mk_socket(server=False):
     return s
 
 
+def mk_msg(sz):
+    """Make a message of given size and include a timestamp."""
+    return bytes("%.6f" % (time.time())).zfill(sz)
+
+
 def run_client(target, port, num_pkts, verbose):
     """Run TCP echo client."""
     cli = mk_socket()
