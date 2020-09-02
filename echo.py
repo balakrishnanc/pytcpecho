@@ -93,22 +93,23 @@ def run_client(target, port, num_pkts, verbose):
         recv.join()
 
 
-def handle_cli(sock, addr, num_pkts, verbose):
-    """Handle connection from client."""
-    for i in range(num_pkts):
-        data = sock.recv(BUF_SZ)
+def cli_handler(sock, addr, num_pkts, verbose):
+    """Echo client data."""
+    with sock:
+        for i in range(num_pkts):
+            data = sock.recv(BUF_SZ)
 
-        if verbose:
-            sys.stdout.write("« [%d]\n" % (len(data)))
+            if verbose:
+                sys.stdout.write("« [%d]\n" % (len(data)))
 
-        n = sock.send(data)
+            n = sock.send(data)
 
-        # Check if we echoed all the bytes back.
-        if n != len(data):
-            __err("Failed to echo all bytes!")
+            # Check if we echoed all the bytes back.
+            if n != len(data):
+                __err("Failed to echo all bytes!")
 
-        if verbose:
-            sys.stdout.write("»\n")
+            if verbose:
+                sys.stdout.write("»\n")
 
 
 def run_server(port, num_pkts, verbose=False):
@@ -119,6 +120,8 @@ def run_server(port, num_pkts, verbose=False):
     srv.bind(('127.0.0.1', port))
     srv.listen(BACKLOG)
 
+    handlers = []
+
     try:
         with srv:
             while True:
@@ -127,11 +130,16 @@ def run_server(port, num_pkts, verbose=False):
                 if verbose:
                     print("• received connection from %s:%d" % (addr))
 
-                # TODO: Spawn a thread to handle the client.
-                with cli:
-                    handle_cli(cli, addr, num_pkts, verbose)
+                handler = threading.Thread(target=cli_handler,
+                                           args=(cli, addr, num_pkts, verbose))
+                handlers.append(handler)
+
+                handler.start()
     except KeyboardInterrupt:
         # Killed from terminal via CTRL-C
+        for t in handlers:
+            t.join()
+
         if verbose:
             print("> quit.")
 
