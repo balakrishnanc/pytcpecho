@@ -114,7 +114,8 @@ if __name__ == '__main__':
                         type=int,
                         default=DEF_PORT,
                         help='Port number')
-    parser.add_argument('--target', dest='target', metavar='target-IP',
+    parser.add_argument('--target', '-t',
+                        metavar='target-IP',
                         type=str,
                         help=('Target IP address for a client to connect'))
     parser.add_argument('--count', '-c',
