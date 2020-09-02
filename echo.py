@@ -99,17 +99,16 @@ def handle_cli(sock, addr, num_pkts, verbose):
         data = sock.recv(BUF_SZ)
 
         if verbose:
-            print("> <- %d" % (len(data)))
+            sys.stdout.write("« [%d]\n" % (len(data)))
 
         n = sock.send(data)
 
-        if verbose:
-            print("> %d ->" % (len(data)))
+        # Check if we echoed all the bytes back.
+        if n != len(data):
+            __err("Failed to echo all bytes!")
 
-        # # Check if we echoed all the bytes back.
-        # if n != len(data):
-        #     __err("Failed to echo all bytes!")
-    # cli.close()
+        if verbose:
+            sys.stdout.write("»\n")
 
 
 def run_server(port, num_pkts, verbose=False):
@@ -126,10 +125,11 @@ def run_server(port, num_pkts, verbose=False):
                 cli, addr = srv.accept()
 
                 if verbose:
-                    print("> received connection from %s:%d" % (addr))
+                    print("• received connection from %s:%d" % (addr))
 
                 # TODO: Spawn a thread to handle the client.
-                handle_cli(cli, addr, num_pkts, verbose)
+                with cli:
+                    handle_cli(cli, addr, num_pkts, verbose)
     except KeyboardInterrupt:
         # Killed from terminal via CTRL-C
         if verbose:
