@@ -6,6 +6,7 @@
 import argparse
 import socket
 import sys
+import threading
 import time
 
 
@@ -71,19 +72,25 @@ def run_client(target, port, num_pkts, verbose):
     if verbose:
         sys.stdout.write("»\n")
 
-    for i in range(num_pkts):
-        data = mk_msg(BUF_SZ)
-        n = cli.send(data)
+    # Create a separate thread to handle receives.
+    recv_opts = (cli, num_pkts, BUF_SZ, verbose)
+    recv = threading.Thread(target=recv_echoes, args=recv_opts)
 
-        if n != len(data):
-            __err("Failed to write all bytes!")
-
-        if verbose:
-            sys.stdout.write("»\n")
-
-    # TODO: Move to a separate thread.
     with cli:
-        recv_echoes(cli, num_pkts, BUF_SZ, verbose)
+        recv.start()
+
+        for i in range(num_pkts):
+            data = mk_msg(BUF_SZ)
+            n = cli.send(data)
+
+            if n != len(data):
+                __err("Failed to write all bytes!")
+
+            if verbose:
+                sys.stdout.write("»\n")
+
+        # Wait until all echoes are received.
+        recv.join()
 
 
 def handle_cli(sock, addr, num_pkts, verbose):
