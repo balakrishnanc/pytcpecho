@@ -13,7 +13,7 @@ import time
 # Default port.
 DEF_PORT = 9988
 
-# Number of packets.
+# Default number of packets.
 DEF_NUM_PKTS = 10
 
 # Connection backlog size.
