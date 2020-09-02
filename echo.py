@@ -22,9 +22,6 @@ DEF_PKT_SZ = 64
 # Connection backlog size.
 BACKLOG = 5
 
-# Buffer size.
-BUF_SZ = 4096
-
 
 def __err(msg, exit_code=1):
     """Write an error message to STDERR."""
@@ -65,7 +62,7 @@ def recv_echoes(sock, num_pkts, sz, verbose):
             sys.stdout.write("« %.2f\n" % (proc_echo(recv_ts, data)))
 
 
-def run_client(target, port, num_pkts, verbose):
+def run_client(target, port, sz, num_pkts, verbose):
     """Run TCP echo client."""
     cli = mk_socket()
 
@@ -76,14 +73,14 @@ def run_client(target, port, num_pkts, verbose):
         sys.stdout.write("»\n")
 
     # Create a separate thread to handle receives.
-    recv_opts = (cli, num_pkts, BUF_SZ, verbose)
+    recv_opts = (cli, num_pkts, sz, verbose)
     recv = threading.Thread(target=recv_echoes, args=recv_opts)
 
     with cli:
         recv.start()
 
         for i in range(num_pkts):
-            data = mk_msg(BUF_SZ)
+            data = mk_msg(sz)
             n = cli.send(data)
 
             if n != len(data):
@@ -96,11 +93,11 @@ def run_client(target, port, num_pkts, verbose):
         recv.join()
 
 
-def cli_handler(sock, addr, num_pkts, verbose):
+def cli_handler(sock, addr, sz, num_pkts, verbose):
     """Echo client data."""
     with sock:
         for i in range(num_pkts):
-            data = sock.recv(BUF_SZ)
+            data = sock.recv(sz)
 
             if verbose:
                 sys.stdout.write("« [%d]\n" % (len(data)))
@@ -115,7 +112,7 @@ def cli_handler(sock, addr, num_pkts, verbose):
                 sys.stdout.write("»\n")
 
 
-def run_server(port, num_pkts, verbose=False):
+def run_server(port, sz, num_pkts, verbose=False):
     """Run TCP echo server."""
     srv = mk_socket(True)
 
@@ -134,7 +131,8 @@ def run_server(port, num_pkts, verbose=False):
                     print("• received connection from %s:%d" % (addr))
 
                 handler = threading.Thread(target=cli_handler,
-                                           args=(cli, addr, num_pkts, verbose))
+                                           args=(cli, addr, sz, num_pkts,
+                                                 verbose))
                 handlers.append(handler)
 
                 handler.start()
@@ -148,7 +146,10 @@ def run_server(port, num_pkts, verbose=False):
 
 
 def main(args):
-    other_opts = (args.count, args.verbose)
+    if args.size < DEF_PKT_SZ:
+        __err("Packet size must be between %d and %d!" % (DEF_PKT_SZ, MAX_BUF_SZ))
+
+    other_opts = (args.size, args.count, args.verbose)
 
     if args.target:
         # Run client.
@@ -172,6 +173,10 @@ if __name__ == '__main__':
                         metavar='target-IP',
                         type=str,
                         help=('Target IP address for a client to connect'))
+    parser.add_argument('--size', '-s',
+                        type=int,
+                        required=True,
+                        help='Size of packet in bytes')
     parser.add_argument('--count', '-c',
                         type=int,
                         default=DEF_NUM_PKTS,
