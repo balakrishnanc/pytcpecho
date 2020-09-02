@@ -27,10 +27,12 @@ def __err(msg, exit_code=1):
     sys.exit(exit_code)
 
 
-def mk_socket():
+def mk_socket(server=False):
     """Make TCP socket."""
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
+    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    if server:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     return s
 
 
