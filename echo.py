@@ -6,6 +6,7 @@
 import argparse
 import socket
 import sys
+import time
 
 
 # Default port.
@@ -38,20 +39,26 @@ def mk_socket(server=False):
 
 def mk_msg(sz):
     """Make a message of given size and include a timestamp."""
-    return bytes("%.6f" % (time.time())).zfill(sz)
+    return bytes("%.6f" % (time.time()), 'utf-8').zfill(sz)
+
+
+def proc_echo(recv_ts, data):
+    """Compute the elapsed time (in ms) from the timestamp in the packet."""
+    return (recv_ts - float(data.lstrip(b'0').decode())) * 1000
 
 
 def recv_echoes(sock, num_pkts, sz, verbose):
     """Receive echoes and process the timestamps in them."""
     for i in range(num_pkts):
         data = sock.recv(sz)
+        recv_ts = time.time()
         n = len(data)
 
         if n != sz:
             __err("Failed to receive all bytes!")
 
         if verbose:
-            sys.stdout.write("«")
+            sys.stdout.write("« %.2f\n" % (proc_echo(recv_ts, data)))
 
 
 def run_client(target, port, num_pkts, verbose):
@@ -62,18 +69,17 @@ def run_client(target, port, num_pkts, verbose):
     cli.connect((target, port))
 
     if verbose:
-        sys.stdout.write("> ")
+        sys.stdout.write("»\n")
 
     for i in range(num_pkts):
-        data = (b'*' * BUF_SZ)
+        data = mk_msg(BUF_SZ)
         n = cli.send(data)
 
         if n != len(data):
             __err("Failed to write all bytes!")
 
         if verbose:
-            sys.stdout.write(".")
-    sys.stdout.write("\n")
+            sys.stdout.write("»\n")
 
     # TODO: Move to a separate thread.
     with cli:
