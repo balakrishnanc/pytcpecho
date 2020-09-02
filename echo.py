@@ -117,7 +117,7 @@ def run_server(port, sz, num_pkts, verbose=False):
     srv = mk_socket(True)
 
     # TODO: Pass interface rather than hard-code the default.
-    srv.bind(('127.0.0.1', port))
+    srv.bind(('0.0.0.0', port))
     srv.listen(BACKLOG)
 
     handlers = []
