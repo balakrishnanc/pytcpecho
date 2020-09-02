@@ -41,6 +41,19 @@ def mk_msg(sz):
     return bytes("%.6f" % (time.time())).zfill(sz)
 
 
+def recv_echoes(sock, num_pkts, sz, verbose):
+    """Receive echoes and process the timestamps in them."""
+    for i in range(num_pkts):
+        data = sock.recv(sz)
+        n = len(data)
+
+        if n != sz:
+            __err("Failed to receive all bytes!")
+
+        if verbose:
+            sys.stdout.write("«")
+
+
 def run_client(target, port, num_pkts, verbose):
     """Run TCP echo client."""
     cli = mk_socket()
@@ -63,12 +76,8 @@ def run_client(target, port, num_pkts, verbose):
     sys.stdout.write("\n")
 
     # TODO: Move to a separate thread.
-    for i in range(num_pkts):
-
-        n = cli.recv(BUF_SZ)
-        print(i, len(n))
-
-    cli.close()
+    with cli:
+        recv_echoes(cli, num_pkts, BUF_SZ, verbose)
 
 
 def handle_cli(sock, addr, num_pkts, verbose):
