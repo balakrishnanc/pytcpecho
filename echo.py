@@ -23,7 +23,7 @@ BUF_SZ = 4096
 
 def __err(msg, exit_code=1):
     """Write an error message to STDERR."""
-    sys.stderr.write(f"Error: f{msg}\n")
+    sys.stderr.write("Error: %s\n" % (msg))
     sys.exit(exit_code)
 
 
@@ -80,7 +80,7 @@ def run_server(port, num_pkts, verbose=False):
                 cli, addr = srv.accept()
 
                 if verbose:
-                    print(f"> received connection from {addr}")
+                    print("> received connection from %s:%d" % (addr))
 
                 # TODO: Spawn a thread to handle the client.
                 with cli:
