@@ -102,8 +102,7 @@ def run_server(port, num_pkts, verbose=False):
                     print("> received connection from %s:%d" % (addr))
 
                 # TODO: Spawn a thread to handle the client.
-                with cli:
-                    handle_cli(cli, addr, num_pkts, verbose)
+                handle_cli(cli, addr, num_pkts, verbose)
     except KeyboardInterrupt:
         # Killed from terminal via CTRL-C
         if verbose:
