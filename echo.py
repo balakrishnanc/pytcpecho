@@ -16,6 +16,9 @@ DEF_PORT = 9988
 # Default number of packets.
 DEF_NUM_PKTS = 10
 
+# Default packet size.
+DEF_PKT_SZ = 64
+
 # Connection backlog size.
 BACKLOG = 5
 
