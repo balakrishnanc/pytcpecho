@@ -43,29 +43,46 @@ def run_client(target, port, num_pkts, verbose):
     # TODO: Pass IP address rather than hard-code the default.
     cli.connect((target, port))
 
-    data = ('*' * 512).encode('utf-8')
+    if verbose:
+        sys.stdout.write("> ")
 
-    with cli:
-        for _ in range(num_pkts):
-            n = cli.send(data)
+    for i in range(num_pkts):
+        data = (b'*' * BUF_SZ)
+        n = cli.send(data)
 
-            if n != len(data):
-                __err("Failed to write all bytes!")
+        if n != len(data):
+            __err("Failed to write all bytes!")
 
-        # TODO: Move to a separate thread.
-        for _ in range(num_pkts):
-            n = cli.recv(BUF_SZ)
+        if verbose:
+            sys.stdout.write(".")
+    sys.stdout.write("\n")
+
+    # TODO: Move to a separate thread.
+    for i in range(num_pkts):
+
+        n = cli.recv(BUF_SZ)
+        print(i, len(n))
+
+    cli.close()
 
 
 def handle_cli(sock, addr, num_pkts, verbose):
     """Handle connection from client."""
-    for _ in range(num_pkts):
+    for i in range(num_pkts):
         data = sock.recv(BUF_SZ)
+
+        if verbose:
+            print("> <- %d" % (len(data)))
+
         n = sock.send(data)
 
-        # Check if we echoed all the bytes back.
-        if n != len(data):
-            __err("Failed to echo all bytes!")
+        if verbose:
+            print("> %d ->" % (len(data)))
+
+        # # Check if we echoed all the bytes back.
+        # if n != len(data):
+        #     __err("Failed to echo all bytes!")
+    # cli.close()
 
 
 def run_server(port, num_pkts, verbose=False):
