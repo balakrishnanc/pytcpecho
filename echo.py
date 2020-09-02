@@ -87,10 +87,10 @@ def handle_cli(sock, addr, num_pkts, verbose):
 
 def run_server(port, num_pkts, verbose=False):
     """Run TCP echo server."""
-    srv = mk_socket()
+    srv = mk_socket(True)
 
     # TODO: Pass interface rather than hard-code the default.
-    srv.bind(('', port))
+    srv.bind(('127.0.0.1', port))
     srv.listen(BACKLOG)
 
     try:
